@@ -12,11 +12,12 @@ Is a service that resizes and crops images provided by url to a width and height
 
 
 ## instalation
-To be able locally run the service or modify it run the following lines in the command prompt to install it
+In order to build and use this project you need either a posix environment(linux/mac), if you are running windows please install [MinGw64](http://mingw-w64.org/doku.php) \
+To be able locally run the service or modify it run the following lines in the terminal to install it
 ```bash
 git clone https://github.com/sp-guip/resizer-service
 cd resizer-service
-go get
+./build.sh
 ```
 you are ready to go 
 
