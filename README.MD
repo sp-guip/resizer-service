@@ -11,7 +11,7 @@ Is a service that resizes and crops images provided by url to a width and height
     ![croppedImage](cropped_square.jpg "CroppedImage")
 
 
-## instalation
+## installation
 To be able locally run the service or modify it run the following lines in the command prompt to install it
 ```bash
 git clone https://github.com/sp-guip/resizer-service
