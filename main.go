@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	"io"
+	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -19,7 +23,7 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/", handleResizeImage)
+	http.HandleFunc("/thumbnail", handleResizeImage)
 	http.ListenAndServe(":"+port, nil)
 }
 
@@ -61,7 +65,32 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 			httpErrorF(res, err.Error())
 			return
 		}
-		fmt.Println(imgData)
+		var originalWidth = imgData.Bounds().Dx()
+		var originalHeight = imgData.Bounds().Dy()
+
+		var widthResizeRatio = float64(width) / float64(originalWidth)
+		var heightResizeRatio = float64(height) / float64(originalHeight)
+		var minResizeRatio = math.Min(math.Min(widthResizeRatio, heightResizeRatio), 1)
+
+		var size = image.Point{X: int(minResizeRatio * float64(originalWidth)), Y: int(minResizeRatio * float64(originalHeight))}
+		var resizedImage = imaging.Resize(imgData, size.X, size.Y, imaging.BSpline)
+
+		var dstImage = imaging.New(width, height, color.Black)
+		var xOffset = (width - size.X) / 2
+		var yOffset = (height - size.Y) / 2
+		dstImage = imaging.Paste(dstImage, resizedImage, image.Point{X: xOffset, Y: yOffset})
+
+		var buf = bytes.Buffer{}
+		err = imaging.Encode(&buf, dstImage, imaging.JPEG, imaging.JPEGQuality(100))
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			res.Write([]byte(fmt.Sprintf("error trying to convert the result image to bytes, err: %s", err.Error())))
+		} else {
+			res.WriteHeader(http.StatusOK)
+			if _, err := res.Write(buf.Bytes()); err != nil {
+				log.Fatalf("error writing image response, err: %s", err.Error())
+			}
+		}
 	}
 }
 
