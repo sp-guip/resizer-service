@@ -58,9 +58,18 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 			httpErrorF(res, err.Error())
 			return
 		}
-		fmt.Println(imgData)
+		var dstMat = gocv.NewMatWithSize(height, width, gocv.MatTypeCV8SC3)
+		var widthResizeRatio = float64(width) / float64(imgData.Cols())
+		var heightResizeRatio = float64(height) / float64(imgData.Rows())
+		var minResizeRatio = widthResizeRatio
+		if widthResizeRatio > heightResizeRatio {
+			minResizeRatio = heightResizeRatio
+		}
+		if minResizeRatio > 1 {
+			minResizeRatio = 1
+		}
+		fmt.Println(dstMat, minResizeRatio)
 	}
-	// os.Exit(0)
 }
 
 // Fetch and parse the image from the url
