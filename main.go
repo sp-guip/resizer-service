@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -85,6 +86,17 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 		dstPixels, _ := dstMat.DataPtrInt8()
 		for i := 0; i < size.Y; i++ {
 			copy(dstPixels[((i+cropOffset.Min.Y)*width+cropOffset.Min.X)*3:((i+cropOffset.Min.Y)*width+cropOffset.Max.X)*3], imgPixels[i*size.X*3:(i+1)*size.X*3])
+		}
+
+		outputBytes, err := gocv.IMEncode(gocv.JPEGFileExt, dstMat)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			res.Write([]byte(fmt.Sprintf("error trying to convert the result image to bytes, err: %s", err.Error())))
+		} else {
+			res.WriteHeader(http.StatusOK)
+			if _, err := res.Write(outputBytes); err != nil {
+				log.Fatalf("error writing image response, err: %s", err.Error())
+			}
 		}
 	}
 }
