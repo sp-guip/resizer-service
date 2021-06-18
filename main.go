@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"gocv.io/x/gocv"
 )
@@ -116,11 +118,16 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 // Fetch and parse the image from the url
 // Varifying it's validity in the end
 func getImage(url string) (*gocv.Mat, error) {
-	req, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get image from url: %s, err: %w", url, err)
+	var err error
+	var input io.Reader
+	if strings.Index(url, "file:///") == 0 {
+		input, err = os.Open(url[8:])
+	} else {
+		var req *http.Response
+		req, err = http.Get(url)
+		input = req.Body
 	}
-	encodedBytes, err := ioutil.ReadAll(req.Body)
+	encodedBytes, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, fmt.Errorf("error reading image data from url: %s, err: %w", url, err)
 	}
