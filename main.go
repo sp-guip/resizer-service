@@ -145,6 +145,10 @@ func fetchImage(url string) (*gocv.Mat, error) {
 		req, err = http.Get(url)
 		input = req.Body
 	}
+	if err != nil {
+		logErrorf("unable to get image from url: %s, err: %s", url, err.Error())
+		return nil, fmt.Errorf("unable to get image from url: %s", url)
+	}
 	encodedBytes, err := ioutil.ReadAll(input)
 	if err != nil {
 		logErrorf("unable to get image from url: %s, err: %s", url, err.Error())
