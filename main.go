@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -68,8 +69,16 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 		if minResizeRatio > 1 {
 			minResizeRatio = 1
 		}
-		fmt.Println(dstMat, minResizeRatio)
+		var size = image.Point{X: int(minResizeRatio * float64(imgData.Cols())), Y: int(minResizeRatio * float64(imgData.Rows()))}
+		var xOffset = (dstMat.Cols() - size.X) / 2
+		var yOffset = (dstMat.Rows() - size.Y) / 2
+		var cropOffset = image.Rect(xOffset, yOffset, dstMat.Cols()-xOffset, dstMat.Rows()-yOffset)
+		gocv.Resize(*imgData, imgData, size, 0, 0, gocv.InterpolationNearestNeighbor)
+		var dstROI = dstMat.Region(cropOffset)
+		imgData.CopyTo(&dstROI)
+		fmt.Println(imgData)
 	}
+	// os.Exit(0)
 }
 
 // Fetch and parse the image from the url
