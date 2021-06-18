@@ -34,7 +34,7 @@ var testCases = []testData{
 	},
 	{
 		url:               "file:///og_square.png",
-		verticalPadding:   0.025,
+		verticalPadding:   0.1,
 		horizontalPadding: 0.05,
 		width:             200,
 		height:            200,
@@ -183,9 +183,8 @@ func TestResize(t *testing.T) {
 
 // Check the scalar sum of all pixel data doesn't pass more than 1 per pixel in average
 func checkScalarAvg(region gocv.Mat) bool {
-	var max = float64(region.Total())
+	var max = float64(region.Total() * 3)
 	var scalar = region.Sum()
-	fmt.Println(scalar)
 	return scalar.Val1 > max || scalar.Val2 > max || scalar.Val3 > max || scalar.Val4 > max
 }
 
