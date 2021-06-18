@@ -26,7 +26,7 @@ var baseUrl string
 
 var testCases = []testData{
 	{
-		url:               "file:///OgSquare.png",
+		url:               "file:///og_square.png",
 		verticalPadding:   0,
 		horizontalPadding: 0.025,
 		width:             200,
@@ -35,7 +35,7 @@ var testCases = []testData{
 		targetHeightRatio: .75,
 	},
 	{
-		url:               "file:///OgSquare.png",
+		url:               "file:///og_square.png",
 		verticalPadding:   0.025,
 		horizontalPadding: 0.05,
 		width:             200,
