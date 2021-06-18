@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
+
+	"gocv.io/x/gocv"
 )
 
 //https://images.pexels.com/photos/658687/pexels-photo-658687.jpeg?cs=srgb&dl=pexels-cindy-gustafson-658687.jpg&fm=jpg
@@ -78,6 +82,40 @@ func init() {
 // Expect not to get an error
 func TestResize(t *testing.T) {
 	for i, testCase := range testCases {
+		var newWidth = int(float32(testCase.width) * testCase.targetWidthRatio)
+		var newHeight = int(float32(testCase.height) * testCase.targetHeightRatio)
+		var url = fmt.Sprintf("%s?url=%s&width=%d&height=%d", baseUrl, testCase.url, newWidth, newHeight)
+		response, err := http.Get(url)
+		if err != nil {
+			t.Errorf("Error requesting URL: %s, error: %s", url, err.Error())
+			continue
+		}
+		if response.StatusCode != http.StatusOK {
+			t.Errorf("Unexpected error for URL: %s, errorStatus: %s", url, response.Status)
+			continue
+		}
+		bytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Errorf("Error reading response from service error: %s", err.Error())
+			continue
+		}
+		img, err := gocv.IMDecode(bytes, gocv.IMReadAnyColor)
+		if err != nil {
+			t.Errorf("Error reading image output of the resizer service, error: %s", err.Error())
+			continue
+		}
+		if img.Cols() != newWidth {
+			t.Errorf("Wrong width returned from service, expected: %d, actual: %d", newWidth, img.Cols())
+		}
+		if img.Rows() != newHeight {
+			t.Errorf("Wrong height returned from service, expected: %d, actual: %d", newHeight, img.Rows())
+		}
+		if img.Channels() != 3 {
+			t.Errorf("The service responded with the wrong number of channels: %d instead of 3", img.Channels())
+		}
+		if img.Type() != gocv.MatTypeCV8SC3 {
+			img.ConvertTo(&img, gocv.MatTypeCV8SC3)
+		}
 		fmt.Println(i, testCase)
 	}
 }
