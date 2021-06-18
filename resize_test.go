@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -120,8 +121,40 @@ func TestResize(t *testing.T) {
 		if byteScalarToInt(img.Sum()) < newWidth*newHeight*100 {
 			t.Errorf("Expected a non-blank image")
 		}
-		fmt.Println(i, testCase)
+		gocv.IMWrite(fmt.Sprintf("Test#%d.out.jpg", i), img)
+
+		// Check what area is supposed to be cropped
+		var topCroppedPixels = int(float32(testCase.height) * testCase.horizontalPadding)
+		var leftCroppedPixels = int(float32(testCase.width) * testCase.verticalPadding)
+		var bottomCropOffset = newHeight - int(float32(testCase.height)*testCase.horizontalPadding)
+		var rightCropOffset = newWidth - int(float32(testCase.width)*testCase.verticalPadding)
+		// Calculate the regions
+		var topCroppedRegion = img.Region(image.Rect(0, 0, newWidth, topCroppedPixels))
+		var leftCroppedRegion = img.Region(image.Rect(0, topCroppedPixels, leftCroppedPixels, bottomCropOffset))
+		var rightCroppedRegion = img.Region(image.Rect(rightCropOffset, topCroppedPixels, newWidth, bottomCropOffset))
+		var bottomCroppedRegion = img.Region(image.Rect(0, bottomCropOffset, newWidth, newHeight))
+		// Check the cropped area is black accommodating the JPG lose of color accuracy
+		if checkScalarAvg(topCroppedRegion) {
+			t.Errorf("Bad cropping, the top crop area has color")
+		}
+		if checkScalarAvg(leftCroppedRegion) {
+			t.Errorf("Bad cropping, the left crop area has color")
+		}
+		if checkScalarAvg(rightCroppedRegion) {
+			t.Errorf("Bad cropping, the right crop area has color")
+		}
+		if checkScalarAvg(bottomCroppedRegion) {
+			t.Errorf("Bad cropping, the bottom crop area has color")
+		}
 	}
+}
+
+// Check the scalar sum of all pixel data doesn't pass more than 1 per pixel in average
+func checkScalarAvg(region gocv.Mat) bool {
+	var max = float64(region.Total())
+	var scalar = region.Sum()
+	fmt.Println(scalar)
+	return scalar.Val1 > max || scalar.Val2 > max || scalar.Val3 > max || scalar.Val4 > max
 }
 
 // Converts a scalar(B4) to an int
