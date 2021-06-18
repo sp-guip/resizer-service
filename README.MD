@@ -11,7 +11,7 @@ Is a service that resizes and crops images provided by url to a width and height
     ![croppedImage](cropped_square.jpg "CroppedImage")
 
 
-## instalation
+## installation
 In order to build and use this project you need either a posix environment(linux/mac), if you are running windows please install [MinGw64](http://mingw-w64.org/doku.php) \
 To be able locally run the service or modify it run the following lines in the terminal to install it
 ```bash
