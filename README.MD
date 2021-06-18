@@ -19,6 +19,7 @@ git clone https://github.com/sp-guip/resizer-service
 cd resizer-service
 ./build.sh
 ```
+***importatnt! in windows after installing, run the project in the cmd and not bash***
 you are ready to go 
 
 ## usage
