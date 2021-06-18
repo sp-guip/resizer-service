@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
 
 	"github.com/disintegration/imaging"
+	// "gocv.io/x/gocv"
 )
 
 type testData struct {
@@ -134,5 +136,61 @@ func TestResize(t *testing.T) {
 		if img.Bounds().Dy() != newHeight {
 			t.Errorf("Wrong height returned from service, expected: %d, actual: %d", newHeight, img.Bounds().Dy())
 		}
+
+		if !checkScalarAvg(img, newWidth*newHeight*10) {
+			t.Errorf("Expected a non-blank image")
+		}
+		imaging.Save(img, fmt.Sprintf("test#%d.out.jpg", i))
+
+		// Check what area is supposed to be cropped
+		var topCroppedPixels = int(float32(testCase.height) * testCase.horizontalPadding)
+		var leftCroppedPixels = int(float32(testCase.width) * testCase.verticalPadding)
+		var bottomCropOffset = newHeight - int(float32(testCase.height)*testCase.horizontalPadding)
+		var rightCropOffset = newWidth - int(float32(testCase.width)*testCase.verticalPadding)
+		// Calculate the regions
+		var topCroppedRegion = imaging.Crop(img, image.Rect(0, 0, newWidth, topCroppedPixels))
+		var leftCroppedRegion = imaging.Crop(img, image.Rect(0, topCroppedPixels, leftCroppedPixels, bottomCropOffset))
+		var rightCroppedRegion = imaging.Crop(img, image.Rect(rightCropOffset, topCroppedPixels, newWidth, bottomCropOffset))
+		var bottomCroppedRegion = imaging.Crop(img, image.Rect(0, bottomCropOffset, newWidth, newHeight))
+		// Check the cropped area is black accommodating the JPG lose of color accuracy
+		if checkScalarAvg(topCroppedRegion, -1) {
+			t.Errorf("Bad cropping, the top crop area has color")
+		}
+		if checkScalarAvg(leftCroppedRegion, -1) {
+			t.Errorf("Bad cropping, the left crop area has color")
+		}
+		if checkScalarAvg(rightCroppedRegion, -1) {
+			t.Errorf("Bad cropping, the right crop area has color")
+		}
+		if checkScalarAvg(bottomCroppedRegion, -1) {
+			t.Errorf("Bad cropping, the bottom crop area has color")
+		}
 	}
+}
+
+// Calculates per channel sum of pixels
+func sumOfImage(region image.Image) [3]uint32 {
+	var sum [3]uint32
+	for y := 0; y < region.Bounds().Dx(); y++ {
+		for x := 0; x < region.Bounds().Dx(); x++ {
+			r, g, b, a := region.At(x, y).RGBA()
+			r = uint32((float64(r) / float64(a)) * 255)
+			g = uint32((float64(g) / float64(a)) * 255)
+			b = uint32((float64(r) / float64(b)) * 255)
+			sum[0] += r
+			sum[1] += g
+			sum[2] += b
+		}
+	}
+	return sum
+}
+
+// Check the scalar sum of all pixel data doesn't pass more than 1 per pixel in average
+func checkScalarAvg(region image.Image, max int) bool {
+	if max == -1 {
+		max = region.Bounds().Dx() * region.Bounds().Dy() * 3
+	}
+	var umax = uint32(max)
+	var sums = sumOfImage(region)
+	return sums[0] > umax || sums[1] > umax || sums[2] > umax
 }
