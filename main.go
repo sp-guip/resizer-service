@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+
+	"gocv.io/x/gocv"
 )
 
 func main() {
@@ -50,6 +53,30 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 		httpErrorF(res, "malformed request URL, the height Parameter specified is illegal, URL: %s, Height: %s", req.URL.String(), heightParam)
 
 	} else {
+		imgData, err := getImage(urlParam)
+		if err != nil {
+			httpErrorF(res, err.Error())
+			return
+		}
+		fmt.Println(imgData)
 	}
 	// os.Exit(0)
+}
+
+// Fetch and parse the image from the url
+// Varifying it's validity in the end
+func getImage(url string) (*gocv.Mat, error) {
+	req, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get image from url: %s, err: %w", url, err)
+	}
+	encodedBytes, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading image data from url: %s, err: %w", url, err)
+	}
+	img, err := gocv.IMDecode(encodedBytes, gocv.IMReadAnyColor)
+	if err != nil || img.Empty() {
+		return nil, fmt.Errorf("error decoding image data from url: %s, err: %w", url, err)
+	}
+	return &img, nil
 }
