@@ -74,11 +74,19 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 		var yOffset = (dstMat.Rows() - size.Y) / 2
 		var cropOffset = image.Rect(xOffset, yOffset, dstMat.Cols()-xOffset, dstMat.Rows()-yOffset)
 		gocv.Resize(*imgData, imgData, size, 0, 0, gocv.InterpolationNearestNeighbor)
-		var dstROI = dstMat.Region(cropOffset)
-		imgData.CopyTo(&dstROI)
-		fmt.Println(imgData)
+		// replacing, due to gocv bug
+		// https://www.gitmemory.com/issue/hybridgroup/gocv/387/456821537
+		// var dstROI = dstMat.Region(cropOffset)
+		// imgData.CopyTo(&dstROI)
+		if imgData.Type() != gocv.MatTypeCV8SC3 {
+			imgData.ConvertTo(imgData, gocv.MatTypeCV8SC3)
+		}
+		imgPixels, _ := imgData.DataPtrInt8()
+		dstPixels, _ := dstMat.DataPtrInt8()
+		for i := 0; i < size.Y; i++ {
+			copy(dstPixels[((i+cropOffset.Min.Y)*width+cropOffset.Min.X)*3:((i+cropOffset.Min.Y)*width+cropOffset.Max.X)*3], imgPixels[i*size.X*3:(i+1)*size.X*3])
+		}
 	}
-	// os.Exit(0)
 }
 
 // Fetch and parse the image from the url
