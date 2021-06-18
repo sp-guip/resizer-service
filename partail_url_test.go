@@ -47,9 +47,11 @@ func TestPartial(t *testing.T) {
 		if testCase.height != -1 {
 			requestUrl += fmt.Sprintf("%s%s=%d", paramSuffix, "height", testCase.height)
 		}
-		if res, err := http.Get(requestUrl); err != nil {
-			t.Errorf("Error requesting URL: %s, error: %s", requestUrl, err.Error())
-		} else if res.StatusCode == http.StatusOK {
+		req := httptest.NewRequest(http.MethodGet, requestUrl, nil)
+		res := httptest.NewRecorder()
+		handleResizeImage(res, req)
+		var response = res.Result()
+		if response.StatusCode == http.StatusOK {
 			t.Errorf("Expected an errorStatus from a request with url: %s", requestUrl)
 		}
 	}
