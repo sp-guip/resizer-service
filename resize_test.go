@@ -116,6 +116,15 @@ func TestResize(t *testing.T) {
 		if img.Type() != gocv.MatTypeCV8SC3 {
 			img.ConvertTo(&img, gocv.MatTypeCV8SC3)
 		}
+
+		if byteScalarToInt(img.Sum()) < newWidth*newHeight*100 {
+			t.Errorf("Expected a non-blank image")
+		}
 		fmt.Println(i, testCase)
 	}
+}
+
+// Converts a scalar(B4) to an int
+func byteScalarToInt(scalar gocv.Scalar) int {
+	return int(scalar.Val1)<<24 | int(scalar.Val2)<<16 | int(scalar.Val3)<<8 | int(scalar.Val4)
 }
