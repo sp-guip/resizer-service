@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/disintegration/imaging"
-	// "gocv.io/x/gocv"
 )
 
 type testData struct {
@@ -104,7 +103,12 @@ func init() {
 	if port == "" {
 		port = "8080"
 	}
-	baseUrl = fmt.Sprintf("http://localhost:%s/thumbnail", port)
+	baseUrl = os.Getenv("URL")
+	if baseUrl == "" {
+		baseUrl = fmt.Sprintf("http://localhost:%s/", port)
+	}
+	baseUrl += "thumbnail"
+	// baseUrl = "https://cloud-resizer.herokuapp.com/thumbnail"
 }
 
 // Test the service with a valid set of data for the correct cropped image behavior
