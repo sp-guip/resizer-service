@@ -2,4 +2,7 @@ module resizer-service
 
 go 1.16
 
-require gocv.io/x/gocv v0.27.0
+require (
+	github.com/disintegration/imaging v1.6.2
+	golang.org/x/image v0.0.0-20210607152325-775e3b0c77b9 // indirect
+)
