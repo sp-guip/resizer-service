@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -99,11 +100,12 @@ func TestMalformed(t *testing.T) {
 			}
 			url = fmt.Sprintf("%s%s=%s&%s=%s&%s=%s", baseUrl, names[0], testCase.url, names[1], testCase.width, names[2], testCase.height)
 		}
-		response, err := http.Get(url)
-		if err != nil {
-			t.Errorf("Error requesting URL: %s, error: %s", url, err.Error())
-			continue
-		}
+
+		req := httptest.NewRequest(http.MethodGet, url, nil)
+		res := httptest.NewRecorder()
+		handleResizeImage(res, req)
+		var response = res.Result()
+
 		if response.StatusCode == http.StatusOK {
 			t.Errorf("Expected an errorStatus from a request with url: %s", url)
 		}

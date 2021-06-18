@@ -5,6 +5,7 @@ import (
 	"image"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -119,11 +120,12 @@ func TestResize(t *testing.T) {
 		var newWidth = int(float32(testCase.width) * testCase.targetWidthRatio)
 		var newHeight = int(float32(testCase.height) * testCase.targetHeightRatio)
 		var url = fmt.Sprintf("%s?url=%s&width=%d&height=%d", baseUrl, testCase.url, newWidth, newHeight)
-		response, err := http.Get(url)
-		if err != nil {
-			t.Errorf("Error requesting URL: %s, error: %s", url, err.Error())
-			continue
-		}
+
+		req := httptest.NewRequest(http.MethodGet, url, nil)
+		res := httptest.NewRecorder()
+		handleResizeImage(res, req)
+		var response = res.Result()
+
 		if response.StatusCode != http.StatusOK {
 			var res, _ = ioutil.ReadAll(response.Body)
 			t.Errorf("Unexpected error for URL: %s, errorStatus: %s, error: %s", url, response.Status, res)
