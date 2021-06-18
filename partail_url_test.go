@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 )
 
@@ -32,6 +33,23 @@ var partialTestCases = []partialTestData{
 // Expects an error always
 func TestPartial(t *testing.T) {
 	for _, testCase := range partialTestCases {
-		fmt.Println(testCase)
+		var requestUrl = baseUrl + "?"
+		var paramSuffix = ""
+		if testCase.url != "none" {
+			requestUrl += fmt.Sprintf("%s%s=%s", paramSuffix, "url", testCase.url)
+			paramSuffix = "&"
+		}
+		if testCase.width != -1 {
+			requestUrl += fmt.Sprintf("%s%s=%d", paramSuffix, "width", testCase.width)
+			paramSuffix = "&"
+		}
+		if testCase.height != -1 {
+			requestUrl += fmt.Sprintf("%s%s=%d", paramSuffix, "height", testCase.height)
+		}
+		if res, err := http.Get(requestUrl); err != nil {
+			t.Errorf("Error requesting URL: %s, error: %s", requestUrl, err.Error())
+		} else if res.StatusCode == http.StatusOK {
+			t.Errorf("Expected an errorStatus from a request with url: %s", requestUrl)
+		}
 	}
 }
