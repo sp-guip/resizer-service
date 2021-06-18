@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 )
 
@@ -66,11 +67,44 @@ var malformedTestCases = []malformedTestData{
 		queryUrl: "?UR&L=https://images.pexels.com/photos/658687/pexels-photo-658687.jpeg?cs=srgb&dl=pexels-cindy-gustafson-658687.jpg&fm=jpg&width=54&height=214",
 	},
 }
+var paramNames = []string{
+	"url",
+	"width",
+	"height",
+}
+var partialParamNames = []string{
+	"ur",
+	"widt",
+	"heigh",
+}
 
 // Tests badly formed urls that contain all the data required for the service but in an illegal format
 // Expects an error, always
 func TestMalformed(t *testing.T) {
 	for _, testCase := range malformedTestCases {
-		fmt.Println(testCase)
+		var url string
+		if testCase.queryUrl != "" {
+			url = baseUrl + testCase.queryUrl
+		} else {
+			var names []string
+			if testCase.partialParamNames {
+				names = partialParamNames
+			} else {
+				names = paramNames
+			}
+			var base = baseUrl
+			if !testCase.noQuerySign {
+				base += "?"
+			}
+			url = fmt.Sprintf("%s%s=%s&%s=%s&%s=%s", baseUrl, names[0], testCase.url, names[1], testCase.width, names[2], testCase.height)
+		}
+		response, err := http.Get(url)
+		if err != nil {
+			t.Errorf("Error requesting URL: %s, error: %s", url, err.Error())
+			continue
+		}
+		if response.StatusCode == http.StatusOK {
+			t.Errorf("Expected an errorStatus from a request with url: %s", url)
+		}
 	}
 }
