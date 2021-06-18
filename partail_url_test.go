@@ -32,7 +32,8 @@ var partialTestCases = []partialTestData{
 // Test a url that is not malformed but doesn't contain all required data
 // Expects an error always
 func TestPartial(t *testing.T) {
-	for _, testCase := range partialTestCases {
+	for i, testCase := range partialTestCases {
+		t.Logf("Iter#%d", i)
 		var requestUrl = baseUrl + "?"
 		var paramSuffix = ""
 		if testCase.url != "none" {

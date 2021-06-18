@@ -11,7 +11,6 @@ import (
 	"gocv.io/x/gocv"
 )
 
-//https://images.pexels.com/photos/658687/pexels-photo-658687.jpeg?cs=srgb&dl=pexels-cindy-gustafson-658687.jpg&fm=jpg
 type testData struct {
 	url               string
 	verticalPadding   float32
@@ -24,6 +23,33 @@ type testData struct {
 
 var baseUrl string
 var testCases = []testData{
+	{
+		url:               "file:///og_square.png",
+		verticalPadding:   0,
+		horizontalPadding: 0.025,
+		width:             200,
+		height:            200,
+		targetWidthRatio:  .65,
+		targetHeightRatio: .75,
+	},
+	{
+		url:               "file:///og_square.png",
+		verticalPadding:   0.025,
+		horizontalPadding: 0.05,
+		width:             200,
+		height:            200,
+		targetWidthRatio:  1.2,
+		targetHeightRatio: 1.1,
+	},
+	{
+		url:               "https://images.pexels.com/photos/658687/pexels-photo-658687.jpeg?cs=srgb&dl=pexels-cindy-gustafson-658687.jpg&fm=jpg",
+		verticalPadding:   0,
+		horizontalPadding: 0,
+		width:             2812,
+		height:            2250,
+		targetWidthRatio:  .8,
+		targetHeightRatio: .8,
+	},
 	{
 		url:               "https://images.pexels.com/photos/658687/pexels-photo-658687.jpeg?cs=srgb&dl=pexels-cindy-gustafson-658687.jpg&fm=jpg",
 		verticalPadding:   0,
@@ -76,13 +102,18 @@ func init() {
 	if port == "" {
 		port = "8080"
 	}
-	baseUrl = fmt.Sprintf("http://localhost:%s/", port)
+	baseUrl = os.Getenv("URL")
+	if baseUrl == "" {
+		baseUrl = fmt.Sprintf("http://localhost:%s/", port)
+	}
+	baseUrl += "thumbnail"
 }
 
 // Test the service with a valid set of data for the correct cropped image behavior
 // Expect not to get an error
 func TestResize(t *testing.T) {
 	for i, testCase := range testCases {
+		t.Logf("Iter#%d", i)
 		var newWidth = int(float32(testCase.width) * testCase.targetWidthRatio)
 		var newHeight = int(float32(testCase.height) * testCase.targetHeightRatio)
 		var url = fmt.Sprintf("%s?url=%s&width=%d&height=%d", baseUrl, testCase.url, newWidth, newHeight)
@@ -92,7 +123,8 @@ func TestResize(t *testing.T) {
 			continue
 		}
 		if response.StatusCode != http.StatusOK {
-			t.Errorf("Unexpected error for URL: %s, errorStatus: %s", url, response.Status)
+			var res, _ = ioutil.ReadAll(response.Body)
+			t.Errorf("Unexpected error for URL: %s, errorStatus: %s, error: %s", url, response.Status, res)
 			continue
 		}
 		bytes, err := ioutil.ReadAll(response.Body)

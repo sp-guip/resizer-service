@@ -22,9 +22,20 @@ func main() {
 	http.ListenAndServe(":"+port, nil)
 }
 
+type jsonError struct {
+	Error string
+}
+
 func httpErrorF(res http.ResponseWriter, format string, args ...interface{}) {
 	res.WriteHeader(http.StatusBadRequest)
-	res.Write([]byte(fmt.Sprintf(format, args...)))
+	var jsonErr = jsonError{
+		Error: fmt.Sprintf(format, args...),
+	}
+	msg, err := json.Marshal(jsonErr)
+	if err != nil {
+		log.Fatalf("Error formating a jsonError, error: %s", err.Error())
+	}
+	res.Write(msg)
 }
 
 //Handle the images resize operations from

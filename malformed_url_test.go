@@ -81,7 +81,8 @@ var partialParamNames = []string{
 // Tests badly formed urls that contain all the data required for the service but in an illegal format
 // Expects an error, always
 func TestMalformed(t *testing.T) {
-	for _, testCase := range malformedTestCases {
+	for i, testCase := range malformedTestCases {
+		t.Logf("Iter#%d", i)
 		var url string
 		if testCase.queryUrl != "" {
 			url = baseUrl + testCase.queryUrl
