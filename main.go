@@ -98,6 +98,8 @@ func handleResizeImage(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// Transport independent process to resize and crop the image
+// Returns the endcoded image bytes
 func resizeAndCrop(img gocv.Mat, width, height int) (bytes.Buffer, error) {
 	var dstMat = gocv.NewMatWithSize(height, width, gocv.MatTypeCV8SC3)
 	var widthResizeRatio = float64(width) / float64(img.Cols())
@@ -134,7 +136,7 @@ func resizeAndCrop(img gocv.Mat, width, height int) (bytes.Buffer, error) {
 }
 
 // Fetch and parse the image from the url
-// Varifying it's validity in the end
+// Verifying it's validity in the end
 func fetchImage(url string) (*gocv.Mat, error) {
 	var err error
 	var input io.Reader
